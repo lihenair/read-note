@@ -53,7 +53,9 @@ dependencies {
 ####获取依赖
 下载依赖的task是
 
-```compileJava
+```
+$ gradle build
+:compileJava
 Download http://repo1.maven.org/maven2/org/apache/commons/commons-lang3/3.1/commons-lang3-3.1.pom
 Download http://repo1.maven.org/maven2/org/apache/commons/commons-parent/22/commons-parent-22.pom
 Download http://repo1.maven.org/maven2/org/apache/apache/9/apache-9.pom
