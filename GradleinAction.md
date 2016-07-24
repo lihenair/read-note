@@ -107,3 +107,12 @@ project，task， properties
 task printVersion(group: 'versioning', description: 'Prints project version.') << {   logger.quiet "Version: $version"}
 ```
 
+
+task rule
+
+```
+task incrementMajorVersion(group: 'versioning', description: 'Increments project major version.') << {    String currentVersion = version.toString()    ++version.major    String newVersion = version.toString()    logger.info "Incrementing major project version: $currentVersion -> $newVersion"    ant.propertyfile(file: versionFile) {        entry(key: 'major', type: 'int', operation: '+', value: 1)    }
+}task incrementMinorVersion(group: 'versioning', description: 'Increments project minor version.') << {    String currentVersion = version.toString()    ++version.minor    String newVersion = version.toString()
+    logger.info "Incrementing minor project version: $currentVersion -> $newVersion"    ant.propertyfile(file: versionFile) {		entry(key: 'minor', type: 'int', operation: '+', value: 1)    }
+}					
+```
