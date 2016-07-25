@@ -107,10 +107,64 @@ project，task， properties
 
 ```
 task printVersion(group: 'versioning', description: 'Prints project version.') << {   logger.quiet "Version: $version"}
+
+task backupReleaseDistribution(type: Copy) {
+    from createDistribution.outputs.files
+    into "$buildDir/backup"
+    }
+
+task release(dependsOn: backupReleaseDistribution) {
+    logger.quiet 'Releaseing the project...'
+    }
 ```
 
+###声明任务的输入和输出
+Gradle以task的input和output是否有变化来确定task是否是**UP-TO-DATE**。如果没有变化，那么task就是**UP-TO-DATE**的。因此，只有输入或输出不同了，task才会执行。
 
-task rule
+###Custom task
+####定义任务
+
+```
+class ReleaseVersionTask extends DefaultTask {
+    @Input Boolean release
+    @OutputFile File destFile
+
+    ReleaseVersionTask() {
+        group = 'versioning'
+        description = 'Makes project a release version.'
+    }
+
+    @TaskAction
+    void start() {
+        project.version.release = true
+        ant.propertyfile(file: destFile) {
+            entry(key: 'release', type: 'string', operation: '=', value: 'true')
+        }
+    }
+}
+```
+####使用任务
+
+```
+task makeReleaseVersion(type: ReleaseVersionTask) {   release = version.release    destFile = versionFile    Setting custom task properties    Defining an enhanced task of type ReleaseVersionTask}
+```
+####task type
+
+```
+task createDistribution(type: Zip, dependsOn: makeReleaseVersion) {
+    from jar.outputs.files
+    
+    from(sourceSets*.allSource) {
+        into 'src
+    }
+    
+    from(rootDir) {
+        include versionFile.name
+    }
+}
+```
+
+###task rule
 
 ```
 task incrementMajorVersion(group: 'versioning', description: 'Increments project major version.') << {    String currentVersion = version.toString()    ++version.major    String newVersion = version.toString()    logger.info "Incrementing major project version: $currentVersion -> $newVersion"    ant.propertyfile(file: versionFile) {        entry(key: 'major', type: 'int', operation: '+', value: 1)    }
@@ -118,3 +172,23 @@ task incrementMajorVersion(group: 'versioning', description: 'Increments project
     logger.info "Incrementing minor project version: $currentVersion -> $newVersion"    ant.propertyfile(file: versionFile) {		entry(key: 'minor', type: 'int', operation: '+', value: 1)    }
 }					
 ```
+
+
+####Building code in buildSrc dircetory
+
+```buildSrc```是构建代码可选的放置地。Groovy的目录结构是src/main/groovy。任何该目录中的代码都会自动编译并放入到Gradle构建脚本的classpath。
+
+```
+.├── build.gradle
+├── buildSrc|      └── src|           └── main|                 └── groovy 
+|                        └── com|                             └── manning
+|                                    └── gia|										  ├── ProjectVersion.groovy|										  └── ReleaseVersionTask.groovy├── src│    └── ...└── version.properties
+```
+####Custom task in code
+
+```
+package com.manning.giaimport org.gradle.api.DefaultTaskimport org.gradle.api.tasks.Input
+
+import org.gradle.api.tasks.OutputFileimport org.gradle.api.tasks.TaskActionclass ReleaseVersionTask extends DefaultTask {    (...)}
+```
+
