@@ -1,6 +1,6 @@
 #Gradle实践笔记#
 
-##Chapter 3
+##Chapter 3 Gradle简单构建
 
 ####使用java插件
 每个Gradle工程都有一个build.gradle做为编译入口
@@ -100,7 +100,7 @@ task wrapper(type: Wrapper)
     distributionPath = 'gradle-dists'
 }
 ```
-##Chapter 4
+##Chapter 4 构建脚本要领
 
 ###构建块
 project，task， properties
@@ -280,4 +280,35 @@ class ReleaseVersionListener implements TaskExecutionGraphListener {
 
 ##Chapter 5 依赖管理
 
-###
+###依赖管理例子
+使用dependencies引入依赖的包，repositories设置从何地获取依赖。
+![](https://github.com/lihenair/Read-note/blob/master/image/gradle_load_dependency.png)
+
+###依赖配置
+![](https://github.com/lihenair/Read-note/blob/master/image/comfiguration_api_in_gradle.png)
+
+Java插件提供了6个配置:compile, runtime, testCompile, testRuntime, archives, 和default。
+
+###自定义配置
+
+```
+configurations {
+    cargo {
+        description = 'Classpath for Cargo Ant tasks.'
+        visible = false
+    }
+}
+```
+查看增加的配置
+
+```
+$ gradle dependencies
+:dependencies
+------------------------------------------------------------
+Root project
+------------------------------------------------------------
+cargo - Classpath for Cargo Ant tasks.
+No dependencies
+```
+增加配置后，就可以直接访问配置名称了。
+
