@@ -277,3 +277,7 @@ class ReleaseVersionListener implements TaskExecutionGraphListener {
     }
 }
 ```
+
+##Chapter 5 依赖管理
+
+###
