@@ -312,3 +312,19 @@ No dependencies
 ```
 增加配置后，就可以直接访问配置名称了。
 
+###配置UML
+![](https://github.com/lihenair/Read-note/blob/master/image/dependencies_uml.png)
+每个以来都是一个Dependcy实例，包括group,name,version和classifier属性。
+
+###剔除依赖
+```
+dependencies {
+    compile('org.codehaus.cargo:cargo-ant:1.3.1') {
+        exclude group: 'xml-apis', module: 'xml-apis'
+        transitive = false
+    }
+}
+```
+
+exclude方法可以剔除传递依赖，使用group或module指定依赖名称。Gradle不允许剔除指定版本，所以verison不会出现。
+transitive属性用于控制依赖的传递性。如果设置为false，则禁用了这个以来的所有传递依赖。
