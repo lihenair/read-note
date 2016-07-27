@@ -327,4 +327,4 @@ dependencies {
 ```
 
 exclude方法可以剔除传递依赖，使用group或module指定依赖名称。Gradle不允许剔除指定版本，所以verison不会出现。
-transitive属性用于控制依赖的传递性。如果设置为false，则禁用了这个以来的所有传递依赖。
+transitive属性用于控制依赖的传递性。如果设置为false，则禁用了这个依赖的所有传递依赖。
