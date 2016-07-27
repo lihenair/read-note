@@ -314,6 +314,7 @@ No dependencies
 
 ###配置UML
 ![](https://github.com/lihenair/Read-note/blob/master/image/dependencies_uml.png)
+
 每个以来都是一个Dependcy实例，包括group,name,version和classifier属性。
 
 ###剔除依赖
@@ -328,3 +329,14 @@ dependencies {
 
 exclude方法可以剔除传递依赖，使用group或module指定依赖名称。Gradle不允许剔除指定版本，所以verison不会出现。
 transitive属性用于控制依赖的传递性。如果设置为false，则禁用了这个依赖的所有传递依赖。
+
+###动态版本
+
+```
+dependencies {
+    cargo 'org.codehaus.cargo:cargo:cargo-ant:1.+'
+}
+````
+如果想使用依赖的最新版本，可以使用latest.integration。也可以使用加好('+')来指定版本。比如‘1.+’，表示1.x版本中最新的发布。
+
+###文件依赖
