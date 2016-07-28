@@ -340,3 +340,102 @@ dependencies {
 如果想使用依赖的最新版本，可以使用latest.integration。也可以使用加好('+')来指定版本。比如‘1.+’，表示1.x版本中最新的发布。
 
 ###文件依赖
+当有些依赖在项目中时，比如在libs/cargo目录里，那么可以使用文件依赖加载。
+
+```
+拷贝之前下载的依赖
+task copyDependenciesToLocalDir(type: Copy) {
+   from configurations.cargo.asFileTree
+   into "${System.properties['user.home']}/libs/cargo"
+}
+```
+导入依赖
+
+```
+dependencies {
+    cargo fileTree(dir: '/libs/cargo', include: '*.jar')
+    //或者这样
+    compile fileTree(include: '*.jar', dir: 'libs')
+}
+```
+
+###使用并配置仓库
+定义仓库的核心是RepositoryHandler接口，它提供方法来增加多种类型的仓库，maven，ivy和本地仓库。项目里通过repositories配置块来调用这些方法。当依赖管理器试图下载依赖和它的元数据是，它会以声明顺序检查仓库。第一个提供依赖的仓库成功后，接下来的仓库不会检查指定的依赖。
+
+![](https://github.com/lihenair/Read-note/blob/master/image/repositories_uml.png)
+
+####Maven仓库
+Maven仓库是Java工程最常用的仓库。库文件通常是jar文件。元数据在POM文件中，以xml格式描述了库的信息和它的传递依赖。
+引入Maven远程仓库：
+
+```
+repositories {
+   mavenCentral()
+}
+```
+依赖从仓库下载后将放到<USER_HOME>/.m2/repository目录中。
+
+####增加自定义maven仓库
+
+```
+repositories {
+   mavenCentral()
+   maven {
+      name 'Custom Maven Repository',
+      url 'http://repository-gradle-in-action.forge.cloudbees.com/release/')
+   }
+}
+```
+
+####目录仓库
+最简单最基本的仓库形式是目录仓库。该目录只包含jar文件，没有元数据。当声明依赖时，只需要使用name和version属性。group属性不会评估并会导致无法解决的依赖问题。使用方式如下：
+
+```
+repositories {
+   flatDir(dir: "${System.properties['user.home']}/libs/cargo", name: 'Local libs directory')
+}
+
+dependencies {
+   //完整模式
+   cargo name: 'activation', version: '1.1'
+   cargo name: 'ant', version: '1.7.1'
+   cargo name: 'ant-launcher', version: '1.7.1'
+   //简写模式
+   cargo ':jaxb-api:2.1', ':jaxb-impl:2.1.13'
+}
+```
+
+###理解本地依赖缓存
+Gradle会自动决定一个是否需要从仓库下载并存到本地缓存。任何后续构建都讲师团重用这些下载好的依赖包。
+
+####分析缓存结构
+
+```
+task printDependencies << {
+   configurations.getByName('cargo').each { dependency ->
+      println dependency
+   }
+}
+```
+该任务将打印工程所需要的所有缓存的依赖包。
+
+Gradle保存依赖的本地缓存根目录是<USER_HOME>/.gradle/caches中，根据不同的gradle版本，内部的目录结构可能不同。
+
+###排除依赖问题
+可以指定依赖冲突策略实现构建失败
+
+```
+configurations.cargo.resolutionStrategy {
+   failOnVersionConflict()
+}
+```
+
+强制特定版本
+
+```
+configurations.cargo.resolutionStrategy {
+   force 'org.codehaus.cargo-ant:1.3.0'
+}
+```
+
+##Chapter 6 多模块构建
