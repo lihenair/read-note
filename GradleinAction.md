@@ -362,7 +362,7 @@ dependencies {
 ###使用并配置仓库
 定义仓库的核心是RepositoryHandler接口，它提供方法来增加多种类型的仓库，maven，ivy和本地仓库。项目里通过repositories配置块来调用这些方法。当依赖管理器试图下载依赖和它的元数据是，它会以声明顺序检查仓库。第一个提供依赖的仓库成功后，接下来的仓库不会检查指定的依赖。
 
-![](https://github.com/lihenair/Read-note/blob/master/image/repositories_uml.png)
+![](https://github.com/lihenair/Read-note/blob/master/image/repositoryhandler_uml.png)
 
 ####Maven仓库
 Maven仓库是Java工程最常用的仓库。库文件通常是jar文件。元数据在POM文件中，以xml格式描述了库的信息和它的传递依赖。
