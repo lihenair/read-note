@@ -439,3 +439,28 @@ configurations.cargo.resolutionStrategy {
 ```
 
 ##Chapter 6 多模块构建
+
+###查看当前项目的工程
+
+```
+gradle projects
+:projects
+
+------------------------------------------------------------
+Root project
+------------------------------------------------------------
+
+Root project 'Todo_Web'
++--- Project ':model'
++--- Project ':repository'
+\--- Project ':web'
+```
+
+###介绍settings文件
+settings文件声明了实例化项目层级的配置。默认的，文件名为settings.gradle，并与根项目的build.gradle在一起。下面展示了settings文件的内容。每个要引入构建的子工程都调用带项目路径的include方法。
+
+```
+include 'model'
+include 'web', 'repository'
+```
+
