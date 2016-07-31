@@ -464,3 +464,8 @@ include 'model'
 include 'web', 'repository'
 ```
 
+###理解Setting API接口
+![](https://github.com/lihenair/Read-note/blob/master/image/settings_uml.png)
+在Gradle构建之前，将创建Settings实例。该实例代表settings.gradle文件。可以调用Gradle#settingsEvaluated(Closure)进行Settings的操作，Settings对象是闭包的参数。
+
+
