@@ -88,6 +88,9 @@ Nuwa项目包含4个部分：
         ReflectionUtils.setField(pathList, pathList.getClass(), "dexElements", allDexElements);
     }
   ```
+- build.gradle
+  ![](https://github.com/lihenair/Read-note/blob/master/image/nuwa_build_gradle.png)
+  该文件显示了整个project的依赖。其中值得注意的是```com.jiajixin.nuwa:gradle:1.2.2'```，该plugin会引入后面的NuwaGradle插件，用于处理includePackage和excludeClass，以及debugOn配置。这3个属性的含义待后面插件时候分析。
 
 至此，Nuwa的分析结束。
 
