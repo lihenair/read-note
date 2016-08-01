@@ -440,7 +440,8 @@ configurations.cargo.resolutionStrategy {
 
 ##Chapter 6 多模块构建
 
-###查看当前项目的工程
+###组合多工程构建
+####查看当前项目的工程
 
 ```
 gradle projects
@@ -456,7 +457,7 @@ Root project 'Todo_Web'
 \--- Project ':web'
 ```
 
-###介绍settings文件
+####介绍settings文件
 settings文件声明了实例化项目层级的配置。默认的，文件名为settings.gradle，并与根项目的build.gradle在一起。下面展示了settings文件的内容。每个要引入构建的子工程都调用带项目路径的include方法。
 
 ```
@@ -464,8 +465,12 @@ include 'model'
 include 'web', 'repository'
 ```
 
-###理解Setting API接口
+####理解Setting API接口
 ![](https://github.com/lihenair/Read-note/blob/master/image/settings_uml.png)
 在Gradle构建之前，将创建Settings实例。该实例代表settings.gradle文件。可以调用Gradle#settingsEvaluated(Closure)进行Settings的操作，Settings对象是闭包的参数。
 
+####层次化或扁平化
+![](https://github.com/lihenair/Read-note/blob/master/image/hierarchical_vs_flat.png)
+扁平化结构的多工程的所有工程都与工程的root层级在同一目录层级，也就是说嵌套的子工程只有一级深度。层次化结构的settings.gradle使用include引入子项目。而扁平化结构使用incluFlat包括子项目，将构建和配置文件放到与工程的root层级同一级，可放到与其他子工程平级的专用目录master。
 
+###配置子工程
