@@ -474,3 +474,82 @@ include 'web', 'repository'
 扁平化结构的多工程的所有工程都与工程的root层级在同一目录层级，也就是说嵌套的子工程只有一级深度。层次化结构的settings.gradle使用include引入子项目。而扁平化结构使用incluFlat包括子项目，将构建和配置文件放到与工程的root层级同一级，可放到与其他子工程平级的专用目录master。
 
 ###配置子工程
+####理解Project API
+![](https://github.com/lihenair/Read-note/blob/master/image/project_api_for_multiproject_build.png)
+对于多Project构建，Project提供了allprojects和subprojects。在多工程构建的默认工程评估顺序是按照字母名字。为了可以控制评估顺序，可以使用evaluation- DependsOn和evaluationDependsOnChildren方法。
+
+####定义指定行为
+
+```
+ext.projectIds = ['group': 'com.manning.gia', 'version': '0.1']
+
+group = projectIds.group
+version = projectIds.version
+project(':model') {
+    group = projectIds.group
+    version = projectIds.version
+    apply plugin: 'java'
+}
+project(':repository') {
+    group = projectIds.group
+    version = projectIds.version
+    apply plugin: 'java'
+}
+project(':web') {
+    group = projectIds.group
+    version = projectIds.version
+    apply plugin: 'java'
+    apply plugin: 'war'
+    apply plugin: 'jetty'
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        providedCompile 'javax.servlet:servlet-api:2.5'
+        runtime 'javax.servlet:jstl:1.1.2'
+    }
+}
+```
+构建方法需要使用```:```，冒号显示了project的路径和连接需要运行的task。例如```:model```表示model工程，```:model:build```表示model工程的build task。
+
+```
+$ gradle :model:build
+:model:compileJava UP-TO-DATE
+:model:processResources UP-TO-DATE
+:model:classes UP-TO-DATE
+:model:jar UP-TO-DATE
+:model:assemble UP-TO-DATE
+:model:compileTestJava UP-TO-DATE
+:model:processTestResources UP-TO-DATE
+:model:testClasses UP-TO-DATE
+:model:test UP-TO-DATE
+:model:check UP-TO-DATE
+:model:build UP-TO-DATE
+```
+
+####声明工程的依赖
+工程依赖的声明类似引入外部lib依赖。方法是在dependencies配置块中使用```compile project(':modulename')```。
+
+```
+project(':model') {
+   ...
+}
+project(':repository') {
+   ...
+   dependencies {
+         compile project(':model')
+   }
+}
+project(':web') {
+   ...
+   dependencies {
+      compile project(':repository')
+      providedCompile 'javax.servlet:servlet-api:2.5'
+      runtime 'javax.servlet:jstl:1.1.2'
+   }
+}
+```
+这样工程可全部编译。repository工程依赖model工程，而web工程依赖repository工程。当编译web工程时，会分析项目的依赖，并且会进行传递依赖的分析，这样依赖就会逐个被引入。
+
+####部分构建
