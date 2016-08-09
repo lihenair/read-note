@@ -49,9 +49,7 @@ class ArrayAlg {
 这个方法是在普通类中定义的，而不是在泛型类中定义的。这是一个泛型方法，类型变量放到修饰符后面，尖括号里，返回类型前面。
 泛型方法可以定义在普通类中，也可以定义在泛型类中。
 当调用一个泛型方法时，在方法名前的尖括号中放入具体的类型：
-```String middle = ArrayAlg.<String>getMiddle("Jonh", "Q", "Public");```。这种情况下，方法调用中可以省略<String>类型参数。编译器有足够的信息能够推断出所调用的方法。它用names的类型(即String[])与泛型类型T[]进行匹配并推断出T一定是String。也就是说可以调用
-```
-String middle = ArrayAlg.getMiddle(3.14, 1729, 0);```。
+```String middle = ArrayAlg.<String>getMiddle("Jonh", "Q", "Public");```。这种情况下，方法调用中可以省略<String>类型参数。编译器有足够的信息能够推断出所调用的方法。它用names的类型(即String[])与泛型类型T[]进行匹配并推断出T一定是String。也就是说可以调用```String middle = ArrayAlg.getMiddle(3.14, 1729, 0);```。
 
 ###类型变量的限定
 有时，类或方法需要对类型变量加以约束。
@@ -73,7 +71,6 @@ class ArrayAlg {
 ```
 public static <T extends Comparable> T min(T[] a)...
 ```
-
 为什么使用关键字extends而不是implements？毕竟Comparable是一个接口。下面的符号：
 
 ```
