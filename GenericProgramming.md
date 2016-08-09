@@ -227,3 +227,208 @@ public static <T> Pair<T> makePair(Class<T> cl) {
 ```
 Pair<String> p = Pair.makePair(String.class);
 ```
+不能构造一个泛型数组：
+
+```
+public static <T extends Comparable> T[] minmax(T[] a) { T[] mm = new T[2]; }
+```
+类型擦除会让这个方法永远构造Object[2]数组。
+
+可以利用反射，调用Array.newInstance：
+
+```
+public static <T extends Comparable> T[] minmax(T... a) {
+    T[] mm = (T[]) Array.newInstance(a.getClass.getComponentType(), 2);
+}
+```
+
+####反省类的静态上下文中类型变量无效
+不能再静态域或方法中引用类型变量：
+
+```
+public class Singleton<T> {
+    private static T singleInstance; // ERROR
+    
+    public static T getInstance() { // ERROR
+        if (singleInstance == null) {
+            singleInstance = new T();
+        }
+        return singleInstance;
+    }
+}
+```
+类型擦除后，只剩下Singleton类，它只包含一个singleInstance域。因此禁止使用带有类型变量的静态域和方法。
+
+####不能抛出或捕获泛型类的实例
+即不能抛出也不能捕获泛型类对象。实际上，甚至泛型类扩展Thrwoable都是不合法的。
+
+```
+public class Problem<T> extends Exception {/*...*/} // ERROR--can't extend Throwable
+```
+catch子句中不能使用类型变量。
+
+```
+public static <T extends Throwable> void doWork(Class<T> t) {
+    try {
+        do work
+    } catch (T e) { // ERROR--can't catch tye variable
+        Logger.global.info()
+    }
+}
+```
+异常范围中使用类型变量是允许的。
+
+```
+public static <T extends Throwable> void doWork(T t) {
+    try {
+        do work
+    } catch (Throwable realCause) {
+        Logger.global.info()
+        t.initCause(realCause);
+        throw t;
+    }
+}
+```
+通过使用泛型类、擦除和@SuppressWarnings注解，就能消除Java类型系统的部分基本限制。
+
+####注意擦除后的冲突
+当泛型类型被擦除时，无法创建引发冲突的条件。下面是一个实示例。假定像下面这样将equals方法添加到Pair类中：
+
+```
+public class Pair<T> {
+    public boolean equals(T value) { return first.equals(value) && second.equals(value); }
+}
+```
+考虑一个Pair<String>。从概念上讲，它有两个equals方法：
+
+```
+boolean equals(String) // define in Pair<T>
+boolean equals(Object) // inherited from Object
+```
+方法擦除后就剩下boolean equals(Object)了，与Object.equals方法发生冲突。解决办法是重新命名引发错误的方法。
+
+泛型规范说明还提到另外一个原则：“要想支持擦除的转换，就需要强行限制一个类或类型变量不能同时成为两个接口类型的子类，而这两个接口是同一个接口的不同参数化。”例如，下面的代码是非法的：
+
+```
+class Calendar implements Comparable<Calendar> {}
+class GregorianCalendar extends Calendar implements Comparable<GregorianCalendar> {} // ERROR
+```
+其原因有可能与合成的桥方法产生冲突。实现了Comaprable<X>的类可以获得一个桥方法：
+
+```
+public int compareTo(Object other) { return compareTo(X) other; }
+```
+对于不同类型的X不能有两个这样的方法。
+
+###泛型类型的继承规则
+Pair\<Manager>是Pair\<Employee>的一个子类吗？答案是“不是”。无论S与T是什么联系，通常Pair\<S>与Pair\<T>没有什么联系。这一限制看起来过于严格，但对于类型安全非常必要。
+
+永远可以将参数化类型转换为一个原始类型。转换成员是类型之后会产生类型错误。
+
+泛型类可以货站或实现其他的泛型。例如，ArrayList\<T>类实现List\<T>接口。
+
+###通配符类型
+```
+Pair<? extends Employee>
+```
+表示任何泛型Pair类型，它的类型参数是Employee的子类。
+
+假设要编写一个打印雇员对的方法，像这样：
+
+```
+public static void printBuddies(Pair<Employee> p) {
+    Employee first = p.getFirst();
+    Employee last = p.getLast();
+    System.out.println(first.getName() + " and " + last.getName() + " are buddies.");
+}
+```
+正如前面讲到的，不能讲Pair\<Manager>传递给这个方法，这点很受限制。解决的方法很简单：使用通配符类型。
+
+```
+public static void printBuddies(Pair<? extends Employee> p)
+```
+类型Pair\<Manager>是Pair<? extends Employee>的子类型。
+
+使用通配符会通过Pair\<? extends Employee>的引用破坏Pair<Manager>吗？
+
+```
+Pair<Manager> manager = new Pair<>(ceo, cfo);
+Pair<? extends Employee> wildcard = manager; // OK
+wildcard.setFirst(lowlyEmployee); // compile-time error
+```
+这可能不会引起破坏。对setFirst的调用有一个类型错误。Pair\<? extends Employee>类型中：
+
+```
+？extends Employee getFirst();
+void setFirst(? extends Employee)
+```
+这样将不能调用setFirst方法。编译器只知道需要某个Employee的子类型，但不知道具体是什么类型的。他拒绝传递任何特定的类型。毕竟?不能用来匹配。
+
+这就是引入有限定的通配符的关键之处。现在有办法区分安全的getter方法和不安全的setter方法了。
+
+####通配符的超类型限定
+通配符限定于类型变量限定十分类似，但它还有一个附加的能力，即可以指定一个**超类型限定(supertype bound)**，如下所示：
+
+```
+? super Manager
+```
+这个通配符限制为Manager的素有超类。(已有的super关键字十分准确的描述了这种联系)。这样可以为方法提供参数，但不能使用返回值。
+
+```
+void setFirst(? super Manager)
+? super Manager getFirst()
+```
+可以使用任意Manager对象调用，而不能用Employee对象调用。然而，调用getFirst，返回的对象类型就不能得到保证了，只能把它付给一个Object。
+
+**直观地讲，带有超类型限定的通配符可以向泛型对象写入，带有子类型限定的通配符可以从泛型对象读取。**
+
+####无限定通配符
+```
+? getFirst()
+void setFirst(?)
+```
+getFirst的返回值只能赋给一个Object。setFirst方法不能被调用，**甚至不能用Object调用**。Pair\<?>和Pair本质的不同在于：可以任意Object对象调用原始的Pair类的setObject方法。
+> **注释：**可以调用setFirst(null)
+
+这种类型对简单地操作非常有用。例如，下面的方法用来测试一个Pair是否包含一个null引用，它不需要实际的类型：
+
+```
+public static boolean hasNull(Pair<?> p) {
+    return p.getFirst() == null || p.getLast() == null;
+}
+```
+通过将hasNull转换成泛型方法，可以避免使用通配符类型：
+
+```
+public static <T> boolean hasNull(Pair<T> p)
+```
+但带有通配符的版本可读性更强。
+
+####通配符捕获
+```
+public static void swap(Pair<?> p)
+```
+通配符不是类型变量，因此不能再编写代码时使用"?"作为一种类型。
+
+```
+? t = p.getFirst(); // ERROR
+p.setFirst(p.getLast());
+p.setLast(t);
+```
+可以使用写一个辅助方法swapHelper解决：
+
+```
+public static <T> void swapHelper(Pair<T> p) {
+    T t = p.getFirst();
+    p.setFirst(p.getLast());
+    p.setLast(t);
+}
+```
+注意swapHelper是一个泛型方法，而swap不是，它有固定的Pair<?>类型的参数。现在可以有swap调用swapHelper：
+
+```
+public static void swap(Pair<?> p) { swapHelper(p); }
+```
+这种情况下，swapHelper方法的参数T捕获通配符。他不知道是哪种类型的通配符，但是这是一个明确的类型，并且\<T> swapHelper的定义只有在T指出类型是才有明确的含义。
+
+通配符播或只有在有许多限制的情况下才是合法的。编译器必须能够确信通配符表达的是单个、确定的类型。例如，ArrayLis\<Pair\<T>>中的T永远不能捕获ArrayList\<Pair\<?>>中的通配符。驻足列表可以保存两个Pair<?>，分别针对？的不同类型。
